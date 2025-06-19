@@ -53,6 +53,76 @@ bool isDraw(char matrix[3][3]) {
     return checkWin(matrix) == ' ';
 }
 
+int evaluate(char matrix[3][3]) {
+    char winner = checkWin(matrix);
+    if (winner == 'O') return +10;
+    if (winner == 'X') return -10;
+    return 0;
+}
+
+bool movesLeft(char matrix[3][3]) {
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+            if (matrix[i][j] == ' ') return true;
+    
+    return false;
+}
+
+int minimax(char matrix[3][3], bool isMax) {
+    int score = evaluate(matrix);
+    if (score != 0) return score;
+    if (!movesLeft(matrix)) return 0;
+
+    if (isMax) {
+        int best = -1000;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (matrix[i][j] == ' ') {
+                    matrix[i][j] = 'O';
+                    best = max(best, minimax(matrix, false));
+                    matrix[i][j] = ' ';
+                }
+            }
+        }
+        return best;
+    } else {
+        int best = 1000;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (matrix[i][j] == ' ') {
+                    matrix[i][j] = 'X';
+                    best = min(best, minimax(matrix, true));
+                    matrix[i][j] = ' ';
+                }
+            }
+        }
+        return best;
+    }
+}
+
+void bestMoveAI(char matrix[3][3]) {
+    int bestVal = -1000;
+    int moveX = -1, moveY = -1;
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (matrix[i][j] == ' ') {
+                matrix[i][j] = 'O';
+                int moveVal = minimax(matrix, false);
+                matrix[i][j] = ' ';
+
+                if (moveVal > bestVal) {
+                    bestVal = moveVal;
+                    moveX = i;
+                    moveY = j;
+                }
+            }
+        }
+    }
+
+    matrix[moveX][moveY] = 'O';
+}
+
 int main() {
     char matrix[3][3] = {
         {' ', ' ', ' '},
@@ -60,25 +130,58 @@ int main() {
         {' ', ' ', ' '}
     };
 
+    int scelta;
+
+    do {
+        cout << "Vuoi giocare con un' amico o l' AI? (1 per giocare con un' amico, 2 per giocare con l' AI): ";
+        cin >> scelta;
+    } while (scelta != 1 && scelta != 2);
+
     int turn = 0;
 
-    while (true) {
-        drawTicTacToe(matrix);
-        cout << "\nTurno del giocatore " << (turn % 2 == 0 ? 'X' : 'O') << endl;
-        putMark(matrix, turn);
+    if (scelta == 1) {
+        while (true) {
+            drawTicTacToe(matrix);
+            cout << "\nTurno del giocatore " << (turn % 2 == 0 ? 'X' : 'O') << endl;
+            putMark(matrix, turn);
 
-        char winner = checkWin(matrix);
-        if (winner == 'X' || winner == 'O') {
-            drawTicTacToe(matrix);
-            cout << "\nHa vinto " << winner << "!" << endl;
-            break;
-        } else if (isDraw(matrix)) {
-            drawTicTacToe(matrix);
-            cout << "\nPareggio!" << endl;
-            break;
+            char winner = checkWin(matrix);
+            if (winner == 'X' || winner == 'O') {
+                drawTicTacToe(matrix);
+                cout << "\nHa vinto " << winner << "!" << endl;
+                break;
+            } else if (isDraw(matrix)) {
+                drawTicTacToe(matrix);
+                cout << "\nPareggio!" << endl;
+                break;
+            }
+
+            turn++;
         }
+    } else {
+        while (true) {
+            drawTicTacToe(matrix);
+            cout << "\nTurno del giocatore " << (turn % 2 == 0 ? 'X' : 'O') << endl;
+            
+            if (turn % 2 == 0) {
+                putMark(matrix, turn);
+            } else {
+                bestMoveAI(matrix);
+            }
 
-        turn++;
+            char winner = checkWin(matrix);
+            if (winner == 'X' || winner == 'O') {
+                drawTicTacToe(matrix);
+                cout << "\nHa vinto " << winner << "!" << endl;
+                break;
+            } else if (isDraw(matrix)) {
+                drawTicTacToe(matrix);
+                cout << "\nPareggio!" << endl;
+                break;
+            }
+
+            turn++;
+        }
     }
 
     return 0;
